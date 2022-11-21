@@ -154,8 +154,14 @@
     $Conditions = GetFromFile($_PATH->get('Conditions'),  false);   // Loading conditions info
     $logFile    = $_PATH->get('Counter', 'relative', $_CONFIG->login_counter_file);
     if ($selectedCondition == 'Auto') {
+        error_log("Checking Counter Dir <" . $_PATH->get('Counter Dir') . ">");
+
         if (!is_dir($_PATH->get('Counter Dir'))) {                                  // create the 'Counter' folder if it doesn't exist
-            mkdir($_PATH->get('Counter Dir'),  0777,  true);
+            if (! mkdir($_PATH->get('Counter Dir'),  0777,  true) ) {
+                error_log("ERROR: Failed creating Counter Dir <" . $_PATH->get('Counter Dir') . ">");
+                echo '<h1>Internal System Error</h1><h2>Unable to log data.  Please contact experiment author.</h2>';
+                exit;
+            }
         }
         
         if (file_exists($logFile)) {                                            // Read counter file & save value
@@ -176,6 +182,12 @@
         
         // write old value + 1 to login counter
         $fileHandle    = fopen($logFile, "w");
+        if ($fileHandle === false) {
+            error_log("ERROR: Failed to open Counter File <" . $logFile . ">");
+            echo '<h1>Internal System Error</h1><h2>Unable to log data.  Please contact experiment author.</h2>';
+            exit;
+        }
+
         fputs($fileHandle, $loginCount+1);
         fclose($fileHandle);
         

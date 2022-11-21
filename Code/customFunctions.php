@@ -187,10 +187,23 @@ function fForceOpen($filename, $mode)
 {
     $dirname = dirname($filename);
     if (!is_dir($dirname)) {
-        mkdir($dirname, 0777, true);
+        if (! mkdir($dirname, 0777, true)) {
+            error_log("ERROR: Unable to create $dirname");
+            die("Internal System Error: Unable to log data.  Please contact experiment author.");
+        }
     }
-    touch($filename);
-    return fopen($filename, $mode);
+    if (! touch($filename)) {
+        error_log("ERROR: Unable to touch $filename");
+        die("Internal System Error: Unable to log data.  Please contact experiment author.");
+    }
+
+    $fh = fopen($filename, $mode);
+    if ($fh === false) {
+        error_log("ERROR: Unable to fopen($filename, $mode)");
+        die("Internal System Error: Unable to log data.  Please contact experiment author.");
+    }
+
+    return $fh;
 }
 /**
  * Recursively escapes an array to prevent passing code along from user input.
@@ -1274,7 +1287,10 @@ function getUserAgentInfo()
     
     // phpbrowscap requires a cache; create cache dir if it doesn't exist
     if (!file_exists('phpbrowscap/cache')) {
-        mkdir('phpbrowscap/cache', 0777, true);
+        if (! mkdir('phpbrowscap/cache', 0777, true) ) {
+            error_log('ERROR: Failed to create phpbrowscap/cache');
+            die("Internal System Error: Unable to log browser data.  Please contact experiment author.");
+        }
     }
     
     // get and return the user agent info
